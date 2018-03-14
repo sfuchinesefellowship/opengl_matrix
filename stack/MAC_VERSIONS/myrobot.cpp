@@ -17,8 +17,8 @@ double old_x, old_y, old_z, new_x, new_y, new_z;
 
 
 point4 at = vec4(0.0, 0.0, 0.0, 1.0);
-point4 eye = vec4(0.0, 0.0, 0.0, 1.0);
-vec4 up = vec4(0.0, 1.0, 0.0, 0.0);
+point4 eye = vec4(0.0, 3.0, 3.0, 1.0);
+vec4 up = vec4(0.0, 0.0, 1.0, 0.0);
 
 float theta_angle = 0.0;
 float phi = 0.0;
@@ -395,11 +395,11 @@ reshape( int width, int height )
 
     //projection = Frustum(left, right, botto, top, near, far);
    // projection = Perspective(45.0, 1.0, near, far);
-    model_view = LookAt(eye,at, up);
     glUniformMatrix4fv( Projection, 1, GL_TRUE, projection );
    // glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view);
 
-//    model_view = mat4( 1.0 );   // An Identity matrix
+    model_view = LookAt(eye,at, up);
+    //model_view = mat4( 1.0 );   // An Identity matrix
 }
 
 //----------------------------------------------------------------------------
