@@ -16,6 +16,7 @@ bool top_view = false;
 double old_x, old_y, old_z, new_x, new_y, new_z;
 float diff_x, diff_y, diff_z = 0.0;
 
+float diff_x1, diff_y1, diff_z1 = 0.0;
 
 //GLfloat left= -1.0, right=1.0, top=1.0, botto= -1.0, near= 0.5, far=3.0;
 
@@ -408,17 +409,17 @@ reshape( int width, int height )
 
     glUniformMatrix4fv( Projection, 1, GL_TRUE, projection );
 
-    if(top_view)
+    if(!top_view)
     {
          at = vec4(0.0, 0.0, 0.0, 1.0);
-         eye = vec4(2.0, 2.0, 2.0, 1.0);
+         eye = vec4(-1.0, 0.0, 1.0, 1.0);
          up = vec4(0.0, 1.0, 0.0, 0.0);
          model_view = LookAt(eye,at, up);
     }
     else {
          at = vec4(0.0, 0.0, 0.0, 1.0);
-         eye = vec4(0.0, 0.5, 0.5, 1.0);
-         up = vec4(1.0, 0.0, 0.0, 0.0);
+         eye = vec4(0.0, 1.0, 1.0, 1.0);
+         up = vec4(-1.0, 0.0, 0.0, 0.0);
          model_view = LookAt(eye,at, up);
     }
 }
@@ -505,8 +506,14 @@ keyboard( unsigned char key, int x, int y )
 {
     switch( key ) {
 	case 033: // Escape Key
+        addNew(0,0,0); //move to new x, y, z position
+        break;
     case 'a':
         addNew(diff_x,diff_y,diff_z); //move to new x, y, z position
+        break;
+    case 'b':
+        addNew(diff_x1,diff_y1,diff_z1); //move to new x, y, z position
+        break;
 	case 'q': case 'Q':
 	    exit( EXIT_SUCCESS );
 	    break;
@@ -531,6 +538,14 @@ main( int argc, char **argv )
     new_x = atof(argv[4]);
     new_y = atof(argv[5]);
     new_z = atof(argv[6]);
+
+
+    diff_x = old_x;
+    diff_y = old_y;
+    diff_z = old_z;
+    diff_x1 = new_x;
+    diff_y1 = new_y;
+    diff_z1 = new_z;
 
     if(std::string(argv[7]) == "tv")
         top_view = true;
