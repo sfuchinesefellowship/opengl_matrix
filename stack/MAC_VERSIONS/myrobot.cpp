@@ -9,7 +9,7 @@ const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 const int NumNodes = 10;
 const int NumAngles = 10;
 
-bool topv = false;
+bool top_view = true;
 double old_x, old_y, old_z, new_x, new_y, new_z;
 
 
@@ -89,15 +89,14 @@ GLuint       ModelView, Projection;
 
 #define TORSO_HEIGHT 5.0
 #define TORSO_WIDTH 1.0
-#define UPPER_LEG_WIDTH  0.5
-#define LOWER_LEG_WIDTH  0.5
+#define LOWER_LEG_WIDTH  1.5
 #define LOWER_LEG_HEIGHT 2.0
 #define UPPER_LEG_HEIGHT 3.0
-#define UPPER_LEG_WIDTH  0.5
-#define HEAD_HEIGHT 1.5
-#define HEAD_WIDTH 1.0
-#define BOTTOM_HEIGHT 2.0
-#define BOTTOM_WIDTH 5.0
+#define UPPER_LEG_WIDTH  1.5
+#define HEAD_HEIGHT 2.0
+#define HEAD_WIDTH 2.0
+#define BOTTOM_HEIGHT 1.0
+#define BOTTOM_WIDTH 3.0
 
 // Set up menu item indices, which we can alos use with the joint angles
 enum {
@@ -117,7 +116,7 @@ theta[NumAngles] = {
     0.0,    // Torso
     0.0,    // Head1
     0.0,    // Head2
-    180.0,  // LeftUpperLeg
+    0.0,  // LeftUpperLeg
     0.0,     // LeftLowerLeg
     0.0    // RightLowerLeg
 };
@@ -376,7 +375,7 @@ reshape( int width, int height )
     glViewport( 0, 0, width, height );
 
     GLfloat left = -10.0, right = 10.0;
-    GLfloat botto = -10.0, top = 10.0;
+    GLfloat botto = -15.0, top = 15.0;
     GLfloat zNear = -10.0, zFar = 10.0;
 
     GLfloat aspect = GLfloat( width ) / height;
@@ -392,14 +391,18 @@ reshape( int width, int height )
 
     mat4 projection = Ortho( left, right, botto, top, zNear, zFar );
 
-
-    //projection = Frustum(left, right, botto, top, near, far);
-   // projection = Perspective(45.0, 1.0, near, far);
     glUniformMatrix4fv( Projection, 1, GL_TRUE, projection );
-   // glUniformMatrix4fv( ModelView, 1, GL_TRUE, model_view);
 
-    model_view = LookAt(eye,at, up);
-    //model_view = mat4( 1.0 );   // An Identity matrix
+    if(top_view)
+    {
+         at = vec4(0.0, 0.0, 0.0, 1.0);
+         eye = vec4(2.0, 2.0, 2.0, 1.0);
+         up = vec4(0.0, 1.0, 0.0, 0.0);
+         model_view = LookAt(eye,at, up);
+    }
+    else {
+        model_view = mat4( 1.0 );   // An Identity matrix
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -415,15 +418,13 @@ initNodes( void )
     m = RotateX(theta[Head1]) * RotateY(theta[Head2]);
     nodes[Head1] = Node( m, head, NULL,  &nodes[UpperLeg]);
 
-    m = Translate(-(0.5*HEAD_WIDTH+0.5*UPPER_LEG_WIDTH), 0.9*UPPER_LEG_HEIGHT, 0.0) *
-	RotateX(theta[UpperLeg]);
-    nodes[UpperLeg] =
-	Node( m, upper_leg, NULL,  &nodes[LowerLeg] );
+    m = Translate(0.0, HEAD_HEIGHT, 0.0) *RotateX(60);
+    nodes[UpperLeg] = Node( m, upper_leg, NULL,  &nodes[LowerLeg] );
 
-    m = Translate(-(0.5*HEAD_WIDTH+0.5*UPPER_LEG_WIDTH), UPPER_LEG_HEIGHT, 0.0) * RotateX(theta[LowerLeg]);
+    m = Translate(0.0,UPPER_LEG_HEIGHT , 0.0) * RotateX(30);
     nodes[LowerLeg] = Node( m, lower_leg, NULL, &nodes[Bottom]);
 
-    m = Translate(0.0, BOTTOM_HEIGHT, 0.0) * RotateX(theta[Bottom]);
+    m = Translate(0.0, LOWER_LEG_HEIGHT, 0.0) * RotateX(theta[Bottom]);
     nodes[Bottom] = Node( m, bottom, NULL, NULL );
 
 }
