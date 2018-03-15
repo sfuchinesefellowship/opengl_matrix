@@ -1,6 +1,9 @@
 
 #include "Angel.h"
 #include <assert.h>
+#include <iostream>
+#include <stdlib.h>
+#include<string.h>
 
 typedef Angel::vec4 point4;
 typedef Angel::vec4 color4;
@@ -9,16 +12,17 @@ const int NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 const int NumNodes = 10;
 const int NumAngles = 10;
 
-bool top_view = true;
+bool top_view = false;
 double old_x, old_y, old_z, new_x, new_y, new_z;
+float diff_x, diff_y, diff_z = 0.0;
 
 
 //GLfloat left= -1.0, right=1.0, top=1.0, botto= -1.0, near= 0.5, far=3.0;
 
 
-point4 at = vec4(0.0, 0.0, 0.0, 1.0);
-point4 eye = vec4(0.0, 3.0, 3.0, 1.0);
-vec4 up = vec4(0.0, 0.0, 1.0, 0.0);
+point4 at = vec4(0.0, 0.0, 0.0, 0.0);
+point4 eye = vec4(0.0, 0.0, 0.0, 0.0);
+vec4 up = vec4(0.0, 0.0, 0.0, 0.0);
 
 float theta_angle = 0.0;
 float phi = 0.0;
@@ -161,7 +165,7 @@ colorcube( void )
     quad( 1, 0, 3, 2 );
     quad( 2, 3, 7, 6 );
     quad( 3, 0, 4, 7 );
-    quad( 6, 5, 1, 2 );
+    quad( 7, 5, 1, 2 );
     quad( 4, 5, 6, 7 );
     quad( 5, 4, 0, 1 );
 }
@@ -296,7 +300,7 @@ void
 display()
 {
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-    traverse( &nodes[Head] );
+    traverse( &nodes[Bottom] );
     glutSwapBuffers();
 }
 
@@ -355,6 +359,17 @@ mouse( int button, int state, int x, int y )
     glutPostRedisplay();
 }
 
+
+void addNew( float diff_x, float diff_y, float diff_z )
+{
+	    nodes[Head].transform =
+		Translate(diff_x, diff_y , diff_z) * RotateX(theta[Head1]) *RotateY(theta[Head2]);
+    // model_view = mvstack.pop();
+    glutPostRedisplay();
+}
+
+
+
 //----------------------------------------------------------------------------
 
 void
@@ -401,7 +416,10 @@ reshape( int width, int height )
          model_view = LookAt(eye,at, up);
     }
     else {
-        model_view = mat4( 1.0 );   // An Identity matrix
+         at = vec4(0.0, 0.0, 0.0, 1.0);
+         eye = vec4(0.0, 0.5, 0.5, 1.0);
+         up = vec4(1.0, 0.0, 0.0, 0.0);
+         model_view = LookAt(eye,at, up);
     }
 }
 
@@ -415,17 +433,19 @@ initNodes( void )
     m = RotateY( theta[Torso] );
     nodes[Torso] = Node( m, torso, NULL, &nodes[Head1] );
 */
-    m = RotateX(theta[Head1]) * RotateY(theta[Head2]);
-    nodes[Head1] = Node( m, head, NULL,  &nodes[UpperLeg]);
+    m = Translate(0.0, 0.0, 0.0) * RotateX(theta[Bottom]);
+    nodes[Bottom] = Node( m, bottom, NULL, &nodes[LowerLeg]);
+    m = Translate(0.0, BOTTOM_HEIGHT, 0.0) * RotateX(30);
+    nodes[LowerLeg] = Node( m, lower_leg, NULL, &nodes[UpperLeg]);
+    m = Translate(0.0, LOWER_LEG_HEIGHT, 0.0) *RotateX(30);
+    nodes[UpperLeg] = Node( m, upper_leg, NULL,  &nodes[Head] );
 
-    m = Translate(0.0, HEAD_HEIGHT, 0.0) *RotateX(60);
-    nodes[UpperLeg] = Node( m, upper_leg, NULL,  &nodes[LowerLeg] );
 
-    m = Translate(0.0,UPPER_LEG_HEIGHT , 0.0) * RotateX(30);
-    nodes[LowerLeg] = Node( m, lower_leg, NULL, &nodes[Bottom]);
+    m = RotateX(theta[Head1]) * RotateY(theta[Head2]) *
+        Translate(0.0, UPPER_LEG_HEIGHT, 0.0);
+    nodes[Head1] = Node( m, head, NULL, NULL);
 
-    m = Translate(0.0, LOWER_LEG_HEIGHT, 0.0) * RotateX(theta[Bottom]);
-    nodes[Bottom] = Node( m, bottom, NULL, NULL );
+
 
 }
 
@@ -485,6 +505,8 @@ keyboard( unsigned char key, int x, int y )
 {
     switch( key ) {
 	case 033: // Escape Key
+    case 'a':
+        addNew(diff_x,diff_y,diff_z); //move to new x, y, z position
 	case 'q': case 'Q':
 	    exit( EXIT_SUCCESS );
 	    break;
@@ -496,6 +518,28 @@ keyboard( unsigned char key, int x, int y )
 int
 main( int argc, char **argv )
 {
+    if(argc < 7)
+    {
+        std::cout<<"There are at least 7 inputs!"<<std::endl;
+        return -1;
+    }
+
+    old_x = atof(argv[1]);
+    old_y = atof(argv[2]);
+    old_z = atof(argv[3]);
+
+    new_x = atof(argv[4]);
+    new_y = atof(argv[5]);
+    new_z = atof(argv[6]);
+
+    if(std::string(argv[7]) == "tv")
+        top_view = true;
+
+
+    std::cout<<"The top view is:"<<argv[7]<<std::endl;
+
+
+
     glutInit( &argc, argv );
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH );
     glutInitWindowSize( 512, 512 );
@@ -513,7 +557,6 @@ main( int argc, char **argv )
     glutMouseFunc( mouse );
 
     glutCreateMenu( menu );
-//    glutAddMenuEntry( "torso", Torso );
     glutAddMenuEntry( "head1", Head1 );
     glutAddMenuEntry( "head2", Head2 );
     glutAddMenuEntry( "upper_leg", UpperLeg );
